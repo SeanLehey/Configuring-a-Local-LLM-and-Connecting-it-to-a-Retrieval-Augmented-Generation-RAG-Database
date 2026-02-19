@@ -20,17 +20,46 @@ Nvidia GeForce RTX 5090 24GB (Mobile version, which is roughly equivalent to a d
 The data with which Large Language Models (LLMs) are trained is typically outdated by the time the LLM releases, especially when that data is a living, evolving programming language. An update from Godot 4.3 to 4.4 can introduce many changes which may not be accounted for by the data that the LLM was trained on. With a RAG, the LLM can reference the latest documentation and avoid providing inaccurate and out-of-date information.
 
 ## Downloading the GDScript Documentation
-For this project, our RAG will be Godot's GDScript documentation - specifically, an offline copy. This is available on Godot's website at https://docs.godotengine.org/en/stable/index.html. See below for relevant section:
-
-<img width="1580" height="222" alt="GodotDocumentationDownload" src="https://github.com/user-attachments/assets/d190644a-0feb-4bc3-9688-debec75cbb32" />
-
-Selecting the _Stable_ option downloads a file called _godot-docs-html-stable.zip_.
-
+For this project, our RAG will be Godot's GDScript documentation - specifically, an offline copy. This is available on Godot's website at https://docs.godotengine.org/en/stable/index.html. Selecting the _Stable_ option downloads a file called _godot-docs-html-stable.zip_.
 
 ## Cleaning the Data
-Due to the nature of how LLMs retrieve data, our strategy will involve converting this documentation database into a vector database. Our current dataset is almost entirely formatted in HTML, which includes tags and elements that may be useful for a web browser, but represent superfluous noise to an LLM. The `html_to_markdown.py` script uses Beautifulsoup and markdownify to sanitize the HTML elements and convert the .html files into a clean markdown format.
+Extracting the contents of the .zip file yields 1,570 .html files, consisting of tutorials, references, and explanations of various elements of Godot and GDScript. These files are easily interpreted by browsers, but not so great for large language models. They contain HTML markup tags which will pollute the plain, natural language we're aiming for in our vector database. Using tools like beautifulsoup and markdownify, we can identify and prune these extraneous elements and convert the .html files into a more processable markdown format. Below are snippets of the same file before and after processing with `html_to_markdown.py`.
 
-https://github.com/user-attachments/assets/6aeb3978-489a-4fab-9c34-2cc5478cfcc1
+#### Raw HTML File:
+
+```
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Creating the enemy" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="getting_started/first_2d_game/04.creating_the_enemy.html" />
+<meta property="og:site_name" content="Godot Engine documentation" />
+<meta property="og:description" content="Now it&#x27;s time to make the enemies our player will have
+to dodge. Their behavior will not be very complex: mobs will spawn randomly at the edges of the screen,
+choose a random direction, and mo..." />
+<meta name="description" content="Now it&#x27;s time to make the enemies our player will have to dodge.
+Their behavior will not be very complex: mobs will spawn randomly at the edges of the screen, choose a
+random direction, and mo..." />
+```
+
+#### Processing...
+
+![ConvertingHTMLtoMD](https://github.com/user-attachments/assets/e5c5a8c6-e163-412a-9db8-567f3fb054bc)
+
+#### Processed File:
+
+```
+# Creating the enemy
+
+Now it's time to make the enemies our player will have to dodge. Their behavior
+will not be very complex: mobs will spawn randomly at the edges of the screen,
+choose a random direction, and move in a straight line.
+
+We'll create a `Mob` scene, which we can then *instance* to create any number
+of independent mobs in the game.
+```
 
 
 
