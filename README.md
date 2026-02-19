@@ -1,14 +1,14 @@
 # Configuring a Local LLM and Connecting it to a Retrieval Augmented Generation (RAG) Database
 Creating my GDScript coding companion
 
-## Why Am I Doing This?
+## About This Project
 I want a local coding assistant to assist me with learning programming languages (in this case, GDScript). This project gives me the opportunity to learn more about the configuration and deployment of local AI models while building towards a useful tool I can use for my game development hobby. This writeup documents my experience learning about data cleaning, chunking, embedding, and creating a vector database to serve as a RAG for a local LLM. I aim to make it as reproduceable as possible so readers can follow along in their own environments.
 
 ## Resources
 * [Godot's Offline Documentation Repository](https://docs.godotengine.org/en/stable/index.html)
 
 
-#### Python Libraries:
+#### Python Libraries
 * [Markdownify](https://pypi.org/project/markdownify/)
 * [Beautifulsoup](https://pypi.org/project/beautifulsoup4/)
 * [Sentence-transformers](https://pypi.org/project/sentence-transformers/)
