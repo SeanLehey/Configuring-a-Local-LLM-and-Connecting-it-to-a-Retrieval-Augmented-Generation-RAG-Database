@@ -85,4 +85,7 @@ system_prompt = (
 
 This can be edited to your liking if, for instance, you're using C# and have chunked the documentation appropriately for that language instead.
 
+Open up a command prompt window, navigate to where the script is located, and type `python query_server.py`. After you do this, go ahead and open `interface.html` with a browser of your choice. You should be presented with the following.
+
+<img width="2560" height="1600" alt="WebAppFirstLook" src="https://github.com/user-attachments/assets/a182aa29-53c5-410b-9e45-5bd1040d6557" />
 
