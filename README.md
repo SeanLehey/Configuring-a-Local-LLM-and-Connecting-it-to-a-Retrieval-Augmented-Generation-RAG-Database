@@ -53,6 +53,12 @@ We'll create a `Mob` scene, which we can then *instance* to create any number
 of independent mobs in the game.
 ```
 
+## Step Two: Chunking and Embedding the Data / Ingest into LanceDB
 
+With our fully converted documentation files, we can now process those further by running our `chunk_and_embed` script. This script logically separates each file into a batch of chunks, embeds those chunks by assigning them unique numerical values, and then ingests those embeddings into LanceDB to be referenced by our LLM.
+
+(Embedding script GIF here)
+
+Once the script has run, we will see a new `godot_docs.lance` file representing our vector database in our project folder.
 
 
