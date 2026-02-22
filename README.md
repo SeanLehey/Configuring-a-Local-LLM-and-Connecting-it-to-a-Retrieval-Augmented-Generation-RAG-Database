@@ -99,7 +99,9 @@ Let's ask it to produce some sample GDScript code.
 
 <img width="2560" height="1600" alt="image" src="https://github.com/user-attachments/assets/25b35408-eb94-4e0e-8d37-8f9332129331" />
 
-As we can see, the LLM is providing legitimate GDScript code for implementing WASD movement for our 2D character.
+<img width="2559" height="1049" alt="image" src="https://github.com/user-attachments/assets/9f2cdbeb-3333-477f-904f-397904e294cc" />
+
+As we can see, the LLM is providing legitimate GDScript code for implementing WASD movement for our 2D character. It even provides supplementary information on assigning input maps in the project settings - a crucial step and another indicator that our RAG is working as intended.
 
 ## Final Thoughts
 
