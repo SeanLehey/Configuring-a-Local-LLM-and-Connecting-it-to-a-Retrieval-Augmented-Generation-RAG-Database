@@ -1,5 +1,5 @@
 # Configuring a Local LLM and Connecting it to a Retrieval Augmented Generation (RAG) Database
-Project Completed in February, 2026
+_Project Completed in February, 2026_
 
 > [!NOTE]
 > The code in this project was developed collaboratively with Claude, Anthropic's AI assistant. I am not a software engineer and I do not claim to be an expert in Python. However, I believe it is important to understand the code Claude produces well enough to explain the function of each script and its constituent parts, rather than blindly run it as a black box solution. A more in-depth overview of my approach to AI tools can be found in my [AI ethics statement](https://github.com/SeanLehey/Personal-AI-Ethics-Statement). With that in mind, all of the planning, writing, code review, and execution of this project was done by me and my puny human fingers.
