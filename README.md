@@ -94,3 +94,12 @@ The RAG allows us to ask questions about Godot and GDScript without laboriously 
 <img width="2560" height="1600" alt="image" src="https://github.com/user-attachments/assets/a44a2a60-1bf3-4169-a833-bd4818e2bffc" />
 
 Voilà! Our local, RAG-assisted LLM is now working perfectly. Towards the bottom of the screen, we can even see the source documentation files the LLM is referencing thanks to the metadata we attached to the chunk via `chunk_and_embed.py`.
+
+Let's ask it to produce some sample GDScript code.
+
+<img width="2560" height="1600" alt="image" src="https://github.com/user-attachments/assets/25b35408-eb94-4e0e-8d37-8f9332129331" />
+
+As we can see, the LLM is providing legitimate GDScript code for implementing WASD movement for our 2D character.
+
+## Final Thoughts
+
