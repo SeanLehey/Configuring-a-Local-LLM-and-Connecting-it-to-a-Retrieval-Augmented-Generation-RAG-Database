@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GDScript Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/night-owl.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e2a;
+    --border: #252a38;
+    --accent: #478cff;
+    --accent2: #a78bfa;
+    --accent3: #34d399;
+    --text: #e2e8f0;
+    --text-dim: #64748b;
+    --text-muted: #374151;
+    --user-bg: #1a2744;
+    --bot-bg: #13161e;
+    --font-mono: 'Space Mono', monospace;
+    --font-ui: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Subtle grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(13, 15, 20, 0.95);
+    backdrop-filter: blur(10px);
+  }
+
+  .logo {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .header-text h1 {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .header-text p {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    margin-top: 1px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent3);
+    margin-left: auto;
+    box-shadow: 0 0 8px var(--accent3);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  #chat {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    scroll-behavior: smooth;
+  }
+
+  #chat::-webkit-scrollbar { width: 4px; }
+  #chat::-webkit-scrollbar-track { background: transparent; }
+  #chat::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .message {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: fadeUp 0.3s ease forwards;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .message-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    padding: 0 4px;
+  }
+
+  .message.user .message-label { color: var(--accent); }
+  .message.assistant .message-label { color: var(--accent2); }
+
+  .bubble {
+    padding: 16px 20px;
+    border-radius: 12px;
+    line-height: 1.7;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    max-width: 100%;
+  }
+
+  .message.user .bubble {
+    background: var(--user-bg);
+    border-color: rgba(71, 140, 255, 0.2);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: #93c5fd;
+  }
+
+  .message.assistant .bubble {
+    background: var(--bot-bg);
+    border-color: var(--border);
+  }
+
+  /* Markdown rendered content */
+  .bubble p { margin-bottom: 12px; }
+  .bubble p:last-child { margin-bottom: 0; }
+
+  .bubble h1, .bubble h2, .bubble h3 {
+    font-family: var(--font-ui);
+    font-weight: 700;
+    margin: 20px 0 10px;
+    color: var(--text);
+  }
+
+  .bubble h1 { font-size: 18px; }
+  .bubble h2 { font-size: 15px; color: var(--accent2); }
+  .bubble h3 { font-size: 13px; color: var(--accent); }
+
+  .bubble code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: #0a0c12;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent3);
+    border: 1px solid var(--border);
+  }
+
+  .bubble pre {
+    margin: 14px 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .bubble pre code {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: inherit;
+    font-size: 12.5px;
+    display: block;
+    padding: 16px;
+    overflow-x: auto;
+    line-height: 1.6;
+  }
+
+  .bubble ul, .bubble ol {
+    padding-left: 20px;
+    margin-bottom: 12px;
+  }
+
+  .bubble li { margin-bottom: 6px; }
+
+  .bubble strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .bubble blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 14px;
+    color: var(--text-dim);
+    margin: 12px 0;
+    font-style: italic;
+  }
+
+  /* Sources panel */
+  .sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .source-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: #0d1117;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  .source-tag span {
+    color: var(--accent3);
+  }
+
+  /* Thinking indicator */
+  .thinking {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bot-bg);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .dots span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent2);
+    animation: bounce 1.2s infinite;
+  }
+
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); opacity: 0.4; }
+    50% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  /* Welcome screen */
+  .welcome {
+    margin: auto;
+    text-align: center;
+    padding: 40px;
+    animation: fadeUp 0.5s ease forwards;
+  }
+
+  .welcome h2 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .welcome p {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 420px;
+  }
+
+  /* Input area */
+  footer {
+    position: relative;
+    z-index: 10;
+    padding: 20px 28px;
+    border-top: 1px solid var(--border);
+    background: rgba(13, 15, 20, 0.95);
+    backdrop-filter: blur(10px);
+  }
+
+  .input-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+  }
+
+  textarea {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 12px 16px;
+    resize: none;
+    outline: none;
+    line-height: 1.6;
+    min-height: 48px;
+    max-height: 160px;
+    transition: border-color 0.15s;
+  }
+
+  textarea:focus {
+    border-color: var(--accent);
+  }
+
+  textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  button {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-family: var(--font-ui);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 12px 22px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: opacity 0.15s, transform 0.1s;
+    white-space: nowrap;
+    height: 48px;
+  }
+
+  button:hover { opacity: 0.9; transform: translateY(-1px); }
+  button:active { transform: translateY(0); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="36" height="36" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+      <path d="m0 0s-.325 1.994-.515 1.976l-36.182-3.491c-2.879-.278-5.115-2.574-5.317-5.459l-.994-14.247L-71-23.218l-1.904 12.912c-.424 2.872-2.932 5.037-5.835 5.037h-38.188c-2.902.0-5.41-2.165-5.834-5.037l-1.905-12.912-27.992 1.997-.994 14.247c-.202 2.886-2.438 5.182-5.317 5.46l-36.2 3.49c-.187.018-.324-1.978-.511-1.978l-.049-7.83 30.658-4.944 1.004-14.374c.203-2.91 2.551-5.263 5.463-5.472l38.551-2.75c.146-.01.29-.016.434-.016 2.897.0 5.401 2.166 5.825 5.038l1.959 13.286h28.005l1.959-13.286c.423-2.871 2.93-5.037 5.831-5.037.142.0.284.005.423.015l38.556 2.75c2.911.209 5.26 2.562 5.463 5.472l1.003 14.374 30.645 4.966z" fill="#fff" transform="matrix(4.162611 0 0 -4.162611 919.24059 673.152141)"/>
+      <path d="m0 0v-47.514-6.035-5.492c.108-.001.216-.005.323-.015l36.196-3.49c1.896-.183 3.382-1.709 3.514-3.609l1.116-15.978 31.574-2.253 2.175 14.747c.282 1.912 1.922 3.329 3.856 3.329h38.188c1.933.0 3.573-1.417 3.855-3.329l2.175-14.747 31.575 2.253 1.115 15.978c.133 1.9 1.618 3.425 3.514 3.609l36.182 3.49c.107.01.214.014.322.015v4.711l.015.005v54.325c5.09692 6.4164715 9.92323 13.494208 13.621 19.449-5.651 9.62-12.575 18.217-19.976 26.182-6.864-3.455-13.531-7.369-19.828-11.534-3.151 3.132-6.7 5.694-10.186 8.372-3.425 2.751-7.285 4.768-10.946 7.118 1.09 8.117 1.629 16.108 1.846 24.448-9.446 4.754-19.519 7.906-29.708 10.17-4.068-6.837-7.788-14.241-11.028-21.479-3.842.642-7.702.88-11.567.926v.006c-.027.0-.052-.006-.075-.006-.024.0-.049.006-.073.006v-.006c-3.872-.046-7.729-.284-11.572-.926-3.238 7.238-6.956 14.642-11.03 21.479-10.184-2.264-20.258-5.416-29.703-10.17.216-8.34.755-16.331 1.848-24.448-3.668-2.35-7.523-4.367-10.949-7.118-3.481-2.678-7.036-5.24-10.188-8.372-6.297 4.165-12.962 8.079-19.828 11.534-7.401-7.965-14.321-16.562-19.974-26.182 4.4426579-6.973692 9.2079702-13.9828876 13.621-19.449z" fill="#478cbf" transform="matrix(4.162611 0 0 -4.162611 104.69892 427.387251)"/>
+      <path d="m0 0-1.121-16.063c-.135-1.936-1.675-3.477-3.611-3.616l-38.555-2.751c-.094-.007-.188-.01-.281-.01-1.916.0-3.569 1.406-3.852 3.33l-2.211 14.994H-81.09l-2.211-14.994c-.297-2.018-2.101-3.469-4.133-3.32l-38.555 2.751c-1.936.139-3.476 1.68-3.611 3.616L-130.721.0l-32.547 3.138c.015-3.498.06-7.33.06-8.093.0-34.374 43.605-50.896 97.781-51.086h.066.067c54.176.19 97.766 16.712 97.766 51.086.0.777.047 4.593.063 8.093z" fill="#478cbf" transform="matrix(4.162611 0 0 -4.162611 784.07144 718.723121)"/>
+      <path d="m0 0c0-12.052-9.765-21.815-21.813-21.815-12.042.0-21.81 9.763-21.81 21.815.0 12.044 9.768 21.802 21.81 21.802C-9.765 21.802.0 12.044.0.0" fill="#fff" transform="matrix(4.162611 0 0 -4.162611 389.21484 527.151321)"/>
+      <path d="m0 0c0-7.994-6.479-14.473-14.479-14.473-7.996.0-14.479 6.479-14.479 14.473s6.483 14.479 14.479 14.479C-6.479 14.479.0 7.994.0.0" fill="#414042" transform="matrix(4.162611 0 0 -4.162611 367.36686 532.537071)"/>
+      <path d="m0 0c-3.878.0-7.021 2.858-7.021 6.381v20.081c0 3.52 3.143 6.381 7.021 6.381s7.028-2.861 7.028-6.381V6.381c0-3.523-3.15-6.381-7.028-6.381" fill="#fff" transform="matrix(4.162611 0 0 -4.162611 511.99336 626.219821)"/>
+      <path d="m0 0c0-12.052 9.765-21.815 21.815-21.815 12.041.0 21.808 9.763 21.808 21.815.0 12.044-9.767 21.802-21.808 21.802-12.05.0-21.815-9.758-21.815-21.802" fill="#fff" transform="matrix(4.162611 0 0 -4.162611 634.78706 527.151321)"/>
+      <path d="m0 0c0-7.994 6.477-14.473 14.471-14.473C22.473-14.473 28.95-7.994 28.95.0s-6.477 14.479-14.479 14.479C6.477 14.479.0 7.994.0.0" fill="#414042" transform="matrix(4.162611 0 0 -4.162611 656.64056 532.537071)"/>
+    </svg>
+  </div>
+  <div class="header-text">
+    <h1>GDScript Assistant</h1>
+    <p>RAG · qwen3-coder:30b · Godot 4.6 Docs</p>
+  </div>
+  <div class="status-dot" title="Server connected"></div>
+</header>
+
+<div id="chat">
+  <div class="welcome" id="welcome">
+    <svg width="64" height="64" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:20px">
+      <path d="m0 0s-.325 1.994-.515 1.976l-36.182-3.491c-2.879-.278-5.115-2.574-5.317-5.459l-.994-14.247L-71-23.218l-1.904 12.912c-.424 2.872-2.932 5.037-5.835 5.037h-38.188c-2.902.0-5.41-2.165-5.834-5.037l-1.905-12.912-27.992 1.997-.994 14.247c-.202 2.886-2.438 5.182-5.317 5.46l-36.2 3.49c-.187.018-.324-1.978-.511-1.978l-.049-7.83 30.658-4.944 1.004-14.374c.203-2.91 2.551-5.263 5.463-5.472l38.551-2.75c.146-.01.29-.016.434-.016 2.897.0 5.401 2.166 5.825 5.038l1.959 13.286h28.005l1.959-13.286c.423-2.871 2.93-5.037 5.831-5.037.142.0.284.005.423.015l38.556 2.75c2.911.209 5.26 2.562 5.463 5.472l1.003 14.374 30.645 4.966z" fill="#fff" transform="matrix(4.162611 0 0 -4.162611 919.24059 673.152141)"/>
+      <path d="m0 0v-47.514-6.035-5.492c.108-.001.216-.005.323-.015l36.196-3.49c1.896-.183 3.382-1.709 3.514-3.609l1.116-15.978 31.574-2.253 2.175 14.747c.282 1.912 1.922 3.329 3.856 3.329h38.188c1.933.0 3.573-1.417 3.855-3.329l2.175-14.747 31.575 2.253 1.115 15.978c.133 1.9 1.618 3.425 3.514 3.609l36.182 3.49c.107.01.214.014.322.015v4.711l.015.005v54.325c5.09692 6.4164715 9.92323 13.494208 13.621 19.449-5.651 9.62-12.575 18.217-19.976 26.182-6.864-3.455-13.531-7.369-19.828-11.534-3.151 3.132-6.7 5.694-10.186 8.372-3.425 2.751-7.285 4.768-10.946 7.118 1.09 8.117 1.629 16.108 1.846 24.448-9.446 4.754-19.519 7.906-29.708 10.17-4.068-6.837-7.788-14.241-11.028-21.479-3.842.642-7.702.88-11.567.926v.006c-.027.0-.052-.006-.075-.006-.024.0-.049.006-.073.006v-.006c-3.872-.046-7.729-.284-11.572-.926-3.238 7.238-6.956 14.642-11.03 21.479-10.184-2.264-20.258-5.416-29.703-10.17.216-8.34.755-16.331 1.848-24.448-3.668-2.35-7.523-4.367-10.949-7.118-3.481-2.678-7.036-5.24-10.188-8.372-6.297 4.165-12.962 8.079-19.828 11.534-7.401-7.965-14.321-16.562-19.974-26.182 4.4426579-6.973692 9.2079702-13.9828876 13.621-19.449z" fill="#478cbf" transform="matrix(4.162611 0 0 -4.162611 104.69892 427.387251)"/>
+      <path d="m0 0-1.121-16.063c-.135-1.936-1.675-3.477-3.611-3.616l-38.555-2.751c-.094-.007-.188-.01-.281-.01-1.916.0-3.569 1.406-3.852 3.33l-2.211 14.994H-81.09l-2.211-14.994c-.297-2.018-2.101-3.469-4.133-3.32l-38.555 2.751c-1.936.139-3.476 1.68-3.611 3.616L-130.721.0l-32.547 3.138c.015-3.498.06-7.33.06-8.093.0-34.374 43.605-50.896 97.781-51.086h.066.067c54.176.19 97.766 16.712 97.766 51.086.0.777.047 4.593.063 8.093z" fill="#478cbf" transform="matrix(4.162611 0 0 -4.162611 784.07144 718.723121)"/>
+      <path d="m0 0c0-12.052-9.765-21.815-21.813-21.815-12.042.0-21.81 9.763-21.81 21.815.0 12.044 9.768 21.802 21.81 21.802C-9.765 21.802.0 12.044.0.0" fill="#fff" transform="matrix(4.162611 0 0 -4.162611 389.21484 527.151321)"/>
+      <path d="m0 0c0-7.994-6.479-14.473-14.479-14.473-7.996.0-14.479 6.479-14.479 14.473s6.483 14.479 14.479 14.479C-6.479 14.479.0 7.994.0.0" fill="#414042" transform="matrix(4.162611 0 0 -4.162611 367.36686 532.537071)"/>
+      <path d="m0 0c-3.878.0-7.021 2.858-7.021 6.381v20.081c0 3.52 3.143 6.381 7.021 6.381s7.028-2.861 7.028-6.381V6.381c0-3.523-3.15-6.381-7.028-6.381" fill="#fff" transform="matrix(4.162611 0 0 -4.162611 511.99336 626.219821)"/>
+      <path d="m0 0c0-12.052 9.765-21.815 21.815-21.815 12.041.0 21.808 9.763 21.808 21.815.0 12.044-9.767 21.802-21.808 21.802-12.05.0-21.815-9.758-21.815-21.802" fill="#fff" transform="matrix(4.162611 0 0 -4.162611 634.78706 527.151321)"/>
+      <path d="m0 0c0-7.994 6.477-14.473 14.471-14.473C22.473-14.473 28.95-7.994 28.95.0s-6.477 14.479-14.479 14.479C6.477 14.479.0 7.994.0.0" fill="#414042" transform="matrix(4.162611 0 0 -4.162611 656.64056 532.537071)"/>
+    </svg>
+    <h2>GDScript Assistant</h2>
+    <p>Ask anything about Godot 4 and GDScript. Answers are retrieved directly from the official documentation.</p>
+  </div>
+</div>
+
+<footer>
+  <div class="input-row">
+    <textarea
+      id="input"
+      placeholder="Ask a GDScript question..."
+      rows="1"
+      onkeydown="handleKey(event)"
+      oninput="autoResize(this)"
+    ></textarea>
+    <button id="send-btn" onclick="sendQuestion()">Ask →</button>
+  </div>
+  <div class="hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+</footer>
+
+<script>
+  const SERVER = "http://localhost:8765/query";
+
+  marked.setOptions({ breaks: true, gfm: true });
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendQuestion();
+    }
+  }
+
+  function appendMessage(role, content, sources) {
+    const welcome = document.getElementById('welcome');
+    if (welcome) welcome.remove();
+
+    const chat = document.getElementById('chat');
+    const msg = document.createElement('div');
+    msg.className = `message ${role}`;
+
+    const label = document.createElement('div');
+    label.className = 'message-label';
+    label.textContent = role === 'user' ? '▸ You' : '▸ Assistant';
+    msg.appendChild(label);
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+
+    if (role === 'user') {
+      bubble.textContent = content;
+    } else {
+      bubble.innerHTML = marked.parse(content);
+      bubble.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+
+      if (sources && sources.length > 0) {
+        const sourcesDiv = document.createElement('div');
+        sourcesDiv.className = 'sources';
+        const seen = new Set();
+        sources.forEach(s => {
+          const key = `${s.source}|${s.section}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            const tag = document.createElement('div');
+            tag.className = 'source-tag';
+            tag.innerHTML = `<span>${s.source}</span> · ${s.section}`;
+            sourcesDiv.appendChild(tag);
+          }
+        });
+        msg.appendChild(bubble);
+        msg.appendChild(sourcesDiv);
+        chat.appendChild(msg);
+        chat.scrollTop = chat.scrollHeight;
+        return;
+      }
+    }
+
+    msg.appendChild(bubble);
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function showThinking() {
+    const chat = document.getElementById('chat');
+    const welcome = document.getElementById('welcome');
+    if (welcome) welcome.remove();
+
+    const div = document.createElement('div');
+    div.className = 'message assistant';
+    div.id = 'thinking';
+
+    const label = document.createElement('div');
+    label.className = 'message-label';
+    label.textContent = '▸ Assistant';
+    div.appendChild(label);
+
+    const thinking = document.createElement('div');
+    thinking.className = 'thinking';
+    thinking.innerHTML = `
+      <div class="dots">
+        <span></span><span></span><span></span>
+      </div>
+      Retrieving context and generating response...
+    `;
+    div.appendChild(thinking);
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function removeThinking() {
+    const el = document.getElementById('thinking');
+    if (el) el.remove();
+  }
+
+  async function sendQuestion() {
+    const input = document.getElementById('input');
+    const btn = document.getElementById('send-btn');
+    const question = input.value.trim();
+    if (!question) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    btn.disabled = true;
+
+    appendMessage('user', question);
+    showThinking();
+
+    try {
+      const res = await fetch(SERVER, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question })
+      });
+
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const data = await res.json();
+      removeThinking();
+      appendMessage('assistant', data.answer, data.sources);
+    } catch (err) {
+      removeThinking();
+      appendMessage('assistant', `⚠️ Could not reach the server. Make sure \`query_server.py\` is running.\n\n\`\`\`\n${err.message}\n\`\`\``);
+    }
+
+    btn.disabled = false;
+    input.focus();
+  }
+</script>
+</body>
+</html>
