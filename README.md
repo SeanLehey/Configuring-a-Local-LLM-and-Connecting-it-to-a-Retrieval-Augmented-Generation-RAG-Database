@@ -104,4 +104,8 @@ Let's ask it to produce some sample GDScript code.
 As we can see, the LLM is providing legitimate GDScript code for implementing WASD movement for our 2D character. It even provides supplementary information on assigning input maps in the project settings - a crucial step and another indicator that our RAG is working as intended.
 
 ## Final Thoughts
+I'd call this project a success! We cleaned, chunked, embedded, and connected Godot's offline GDScript documentation repository to a local LLM, and demonstrated that it works as intended. The most important takeaway is that this methodology can be applied to other databases as well. Using textbooks (non-commercially), documentation, and other long-form written content as RAGs will achieve the same effect for various learning goals.
 
+I'd say the only bottleneck I foresee with a project like this is local compute. I'm running a pretty beefy laptop with a mobile 5090 and 64GB of DDR5 RAM, but I know that's not accessible to everyone due to the absurd hardware prices we're seeing in early 2026. As it stands now, even builds like mine pale in comparison to the compute behind paid SaaS services like Claude, Gemini, or ChatGPT.
+
+But while this started as a proof of concept, I'm actually quite pleased with the performance I'm seeing from local models and the RAG as we processed it. I'll definitely be using this to assist with my game development hobby and other pursuits as well.
