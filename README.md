@@ -115,3 +115,10 @@ I'd call this project a success! We cleaned, chunked, embedded, and connected Go
 I'd say the only bottleneck I foresee with a project like this is local compute. I'm running a pretty beefy laptop with a mobile 5090 and 64GB of DDR5 RAM, but I know that's not accessible to everyone due to the absurd hardware prices we're seeing in early 2026. As it stands now, even builds like mine pale in comparison to the compute behind paid SaaS services like Claude, Gemini, or ChatGPT.
 
 But while this started as a proof of concept, I'm actually quite pleased with the performance I'm seeing from local models and the RAG as we processed it. I'll definitely be using this to assist with my game development hobby and other pursuits as well.
+
+## Lessons Learned for Next time
+I think I could have used a better sentence transformer than `all-MiniLM-L6-v2` with its token max input of 256. A more robust transformer like `nomic-embed-text-v1.5` with its 8,192-token context window would have eliminated any concerns about text truncation.
+
+I also could probably afford to use a better local model. Speed isn't my paramount concern given that I'll be coding and troubleshooting while the LLM generates its response. Whether via reduced quantization or a simply more robust model, I think I can afford something more compute-intensive given my current hardware setup.
+
+And finally - the LLMaaS I used for this project. Claude has come a long way in the past few years, and I'm highly impressed with its prowess with Python and other languages. I think that at the time of writing this (February, 2026), it's becoming clearer what role LLMs are going to play in the future of work. They genuinely are a force multiplier, and I'm excited to continue honing my approach to these tools as they become more powerful and impressive over time.
